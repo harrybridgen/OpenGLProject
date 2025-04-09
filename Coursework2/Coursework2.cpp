@@ -111,7 +111,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 
 GLuint postFBO, postColorTex, postDepthTex;
 
-void SetupPostProcessing() {
+void SetupPostProcessingFrameBuffer() {
     glGenFramebuffers(1, &postFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, postFBO);
 
@@ -157,40 +157,84 @@ void SetupFullscreenQuad() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 }
+void RenderFogPostProcessing(GLuint fogShader, GLuint postColorTex, GLuint postDepthTex,
+    glm::vec3 fogColor, glm::vec3 cameraPos,
+    const glm::mat4& projection, const glm::mat4& view) {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, WIDTH, HEIGHT);
+
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glUseProgram(fogShader);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, postColorTex);
+    glUniform1i(glGetUniformLocation(fogShader, "scene"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, postDepthTex);
+    glUniform1i(glGetUniformLocation(fogShader, "depthMap"), 1);
+
+    glUniform3fv(glGetUniformLocation(fogShader, "fogColor"), 1, glm::value_ptr(fogColor));
+    glUniform3fv(glGetUniformLocation(fogShader, "camPos"), 1, glm::value_ptr(cameraPos));
+
+    glm::mat4 invProj = glm::inverse(projection);
+    glm::mat4 invView = glm::inverse(view);
+
+    glUniformMatrix4fv(glGetUniformLocation(fogShader, "invProj"), 1, GL_FALSE, glm::value_ptr(invProj));
+    glUniformMatrix4fv(glGetUniformLocation(fogShader, "invView"), 1, GL_FALSE, glm::value_ptr(invView));
+
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    glEnable(GL_DEPTH_TEST);
+}
+
+void SetupShadowFramebuffer(GLuint& shadowFBO, GLuint& shadowMap, GLuint width, GLuint height) {
+    glGenFramebuffers(1, &shadowFBO);
+    glGenTextures(1, &shadowMap);
+
+    glBindTexture(GL_TEXTURE_2D, shadowMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
 int main() {
-    if (!glfwInit()) return -1;
-
     std::srand(static_cast<unsigned int>(std::time(0)));
 
+    if (!glfwInit()) return -1;
+
+    glfwWindowHint(GLFW_SAMPLES, 4);
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "RunEscape", nullptr, nullptr);
     if (!window) { glfwTerminate(); return -1; }
 
     glfwMakeContextCurrent(window);
     if (gl3wInit()) return -1;
 
-    //init opengl stuff
-    glEnable(GL_DEPTH_TEST);
-    glGenFramebuffers(1, &shadowFBO);
-    glGenTextures(1, &shadowMap);
-    glBindTexture(GL_TEXTURE_2D, shadowMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// OpenGL options
+    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_DEPTH_TEST);    
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    //init shadow frame buffer
+	SetupShadowFramebuffer(shadowFBO, shadowMap, SHADOW_WIDTH, SHADOW_HEIGHT);
+
     // init camera
     Camera camera;
+	camera.Init();
 
     //init terrain
     Terrain terrain;
@@ -247,113 +291,87 @@ int main() {
     treeManager.SetupOpenGL();
 
 	//init prost processing
-    SetupPostProcessing();
+    SetupPostProcessingFrameBuffer();
     SetupFullscreenQuad();
 
+	//init delta time
     float lastFrameTime = glfwGetTime();
 
     while (!glfwWindowShouldClose(window)) {
+        // calc delta time
         float currentFrameTime = glfwGetTime();
         float dt = currentFrameTime - lastFrameTime;
         lastFrameTime = currentFrameTime;
         
         glfwPollEvents();
 
+        // update player
         player.Update(dt, terrain);
 
+        // update camera
         camera.SetTarget(player.GetPosition() + glm::vec3(0.0f, 2.6f, 0.0f));
 		camera.UpdateVectors();
 
+		//update sun & related variables
 		sun.Update(dt, player.GetPosition());
-
         glm::vec3 lightDir = sun.GetDirection();
         glm::vec3 lightColor = sun.GetColor();
         float sunElevation = sun.GetElevation();
         glm::mat4 lightSpaceMatrix = sun.GetLightSpaceMatrix();
 
+		// update shadow map
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
-
         glUseProgram(shadowShader);
         glUniformMatrix4fv(glGetUniformLocation(shadowShader, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
         treeManager.RenderShadow(shadowShader);
         player.RenderShadow(shadowShader, lightSpaceMatrix);
 
+		// change to post processing framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, postFBO);
         glViewport(0, 0, WIDTH, HEIGHT);  
 
+        // Draw sky
         float t = glm::clamp(sunElevation, -1.0f, 1.0f);
         float nightAmount = glm::clamp(glm::smoothstep(-0.9f, 0.0f, t), 0.0f, 1.0f);
         glm::vec3 nightColor = glm::vec3(0.05f, 0.05f, 0.1f);
         glm::vec3 dayColor = glm::vec3(0.5f, 0.7f, 1.0f);
         glm::vec3 skyColor;
-
         skyColor = glm::mix(dayColor, nightColor, nightAmount);
         glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// update projection and view matrices
         float nearPlane = 0.1f;
         float farPlane = WORLD_SIZE;
-
 		glm::vec3 cameraPos = camera.GetPosition();
 		glm::vec3 cameraTarget = camera.GetTarget();
 		glm::vec3 cameraUp = camera.GetUp();
-
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / HEIGHT, nearPlane, farPlane);
         glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
 
-        // Draw Floor
+        // render floor
         terrain.Render(projection, view, cameraPos, lightDir, lightColor, lightSpaceMatrix, shadowMap, sunElevation);
 
-        // Draw Player
+        // render player
         player.Render(playerShader, projection, view, lightDir, lightColor, cameraPos, lightSpaceMatrix, shadowMap, sunElevation);
 
 
-        // Draw Trees
+        // render trees
         treeManager.Render(projection, view, treeShader, lightDir, lightColor, cameraPos, lightSpaceMatrix, shadowMap, sunElevation);
 
-        // Draw Water
+        // render water
         water.Render(projection, view, sunElevation);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(0, 0, WIDTH, HEIGHT);
-
-        glDisable(GL_DEPTH_TEST);
-
-        glClear(GL_COLOR_BUFFER_BIT);
-        glUseProgram(fogShader);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, postColorTex);
-        glUniform1i(glGetUniformLocation(fogShader, "scene"), 0);
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, postDepthTex);
-        glUniform1i(glGetUniformLocation(fogShader, "depthMap"), 1);
-
+		// render post processing
         glm::vec3 fogDay = glm::vec3(0.6f, 0.7f, 0.8f);
         glm::vec3 fogNight = glm::vec3(0.05f, 0.06f, 0.08f);
         glm::vec3 fogColor = glm::mix(fogDay, fogNight, nightAmount);
-
-        glUniform3fv(glGetUniformLocation(fogShader, "fogColor"), 1, glm::value_ptr(fogColor));
-
-        glUniform3fv(glGetUniformLocation(fogShader, "camPos"), 1, glm::value_ptr(cameraPos));
-
-        glm::mat4 invProj = glm::inverse(projection);
-        glm::mat4 invView = glm::inverse(view);
-
-        glUniformMatrix4fv(glGetUniformLocation(fogShader, "invProj"), 1, GL_FALSE, glm::value_ptr(invProj));
-        glUniformMatrix4fv(glGetUniformLocation(fogShader, "invView"), 1, GL_FALSE, glm::value_ptr(invView));
-
-        glBindVertexArray(quadVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-
+        RenderFogPostProcessing(fogShader, postColorTex, postDepthTex, fogColor, cameraPos, projection, view);
 
         glfwSwapBuffers(window);
-		glEnable(GL_DEPTH_TEST);
-
-
+		
     }
 
     glfwDestroyWindow(window);

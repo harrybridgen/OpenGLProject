@@ -5,7 +5,7 @@
 
 class Camera {
 public:
-    Camera();
+    void Init();
     void UpdateVectors();
     void SetTarget(const glm::vec3& newTarget);
     void ProcessMouseMovement(float xoffset, float yoffset);

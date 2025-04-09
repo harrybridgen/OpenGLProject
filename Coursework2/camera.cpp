@@ -1,12 +1,12 @@
 #include "Camera.h"
 
-Camera::Camera()
-    : Target(10.0f, 10.0f, 10.0f),
-    Distance(30.0f),
-    Yaw(-90.0f),
-    Pitch(20.0f),
-    WorldUp(0.0f, 1.0f, 0.0f)
-{
+void Camera::Init() {
+    Target = glm::vec3(10.0f, 10.0f, 10.0f);
+    Distance = 30.0f;
+    Yaw = -90.0f;
+    Pitch = 20.0f;
+    WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
     UpdateVectors();
 }
 
