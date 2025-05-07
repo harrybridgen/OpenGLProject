@@ -11,6 +11,7 @@ void Camera::Init() {
 }
 
 void Camera::UpdateVectors() {
+	// updates the camera's front, right, and up vectors based on the current yaw and pitch angles
     float yawRad = glm::radians(Yaw);
     float pitchRad = glm::radians(Pitch);
 
@@ -31,12 +32,14 @@ void Camera::SetTarget(const glm::vec3& newTarget) {
 }
 
 void Camera::ProcessMouseMovement(float xoffset, float yoffset) {
+	// processes mouse movement to adjust yaw and pitch    
     xoffset *= MouseSensitivity;
     yoffset *= MouseSensitivity;
 
     Yaw += xoffset;
     Pitch += yoffset;
 
+	// clamp pitch to prevent clipping
     if (Pitch > 65.0f) Pitch = 65.0f;
     if (Pitch < 15.0f) Pitch = 15.0f;
 

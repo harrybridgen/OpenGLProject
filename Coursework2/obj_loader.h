@@ -12,7 +12,6 @@ struct MeshSegment {
 std::vector<MeshSegment> LoadMeshByMaterial(const std::string& inputfile);
 std::vector<float> LoadMyObjWithNormals(const std::string& inputfile);
 std::vector<float> LoadMyObj(const std::string& inputfile);
-std::vector<float> LoadMyObjUV(const std::string& inputfile);
 struct Vertex {
 	float x, y, z;
 	float u, v;

@@ -14,11 +14,13 @@ public:
     float GetElevation() const;
 
 private:
-    float sunAngle = -glm::half_pi<float>();
+    
     float worldSize;
 
     glm::vec3 direction;
     glm::vec3 color;
     glm::mat4 lightSpaceMatrix;
     float elevation;
+    float sunAngle = -glm::half_pi<float>();
+	int sunSpeed = 0.01; // Speed of the sun's movement
 };

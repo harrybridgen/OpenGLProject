@@ -15,29 +15,10 @@ uniform float sunElevation;
 uniform sampler2D cliffTex;
 uniform sampler2D grassTex;
 uniform sampler2D riverbedTex;
-
-
+uniform float shininess;
 
 out vec4 FragColor;
 
-float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(341.5, 643.02))) * 19281.827182);
-}
-
-float noise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-
-    float a = hash(i);
-    float b = hash(i + vec2(1.0, 0.0));
-    float c = hash(i + vec2(0.0, 1.0));
-    float d = hash(i + vec2(1.0, 1.0));
-
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(a, b, u.x) +
-           (c - a) * u.y * (1.0 - u.x) +
-           (d - b) * u.x * u.y;
-}
 
 float ShadowCalc(vec4 fragPosLightSpace) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -74,18 +55,12 @@ void main() {
     vec3 grass = texture(grassTex, UV * 24.0).rgb;
     vec3 stone = texture(cliffTex, UV * 24.0).rgb;
 
-
     // Grass/sand based on height
     float heightFactor = smoothstep(-4.0, -1.0, worldPosition.y);
+    vec3 baseColor = mix(sand, grass, heightFactor);
 
-    // Noise for color variation
-    float variation = noise(worldPosition.xz * 0.5) * 0.05;
-    vec3 baseColor = mix(sand, grass, heightFactor) + variation;
-
-    // Steepness detection
+    // Steepness detection and blend in stone on steep slopes
     float steepness = smoothstep(0.99, 0.7, abs(Normal.y));
-
-    // Blend in stone on steep slopes
     baseColor = mix(baseColor, stone, steepness);
 
     // Lighting
@@ -96,13 +71,21 @@ void main() {
     float daylightFactor = clamp(sunElevation, 0.0, 1.0);
     vec3 diffuse = diff * lightColor * daylightFactor;
 
+    // Specular
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 halfwayDir = normalize(lightDirNorm - viewDir);
+    float spec = pow(max(dot(norm, halfwayDir), 0.0), shininess);
+    vec3 specular = spec * lightColor * daylightFactor * 0.5;
 
     // Shadows
     vec4 fragPosLightSpace = lightSpaceMatrix * vec4(FragPos, 1.0);
     float shadow = ShadowCalc(fragPosLightSpace);
 
-    vec3 lighting = (ambient + (1.0 - shadow) * diffuse) * baseColor;
-
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * baseColor;
+    
+    //vec3 lighting = specular;
     FragColor = vec4(lighting, 1.0);
+
+
 }
 

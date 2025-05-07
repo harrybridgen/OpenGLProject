@@ -6,7 +6,9 @@ void Sun::Init(float worldSize) {
 }
 
 void Sun::Update(float deltaTime, const glm::vec3& targetPosition) {
-    sunAngle += deltaTime * 0.05f;
+
+	sunAngle += deltaTime * sunSpeed;
+
     if (sunAngle > 0.5f)
         sunAngle = -glm::pi<float>() - 0.5f;
 

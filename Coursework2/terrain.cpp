@@ -17,10 +17,6 @@ void Terrain::Init(int tilesX, int tilesZ) {
     grassTexture = LoadTexture("textures/rocky_terrain_02_diff_4k.jpg");
     riverbedTexture = LoadTexture("textures/sandy_gravel_02_diff_4k.jpg");
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
     std::vector<float> tileMesh = {
         0.0f, 0.0f, 0.0f,
         1.0f, 0.0f, 0.0f,
@@ -66,6 +62,7 @@ void Terrain::Render(const glm::mat4& projection, const glm::mat4& view, const g
     glUniform3fv(glGetUniformLocation(shaderProgram, "lightDir"), 1, glm::value_ptr(lightDir));
     glUniform3fv(glGetUniformLocation(shaderProgram, "lightColor"), 1, glm::value_ptr(lightColor));
     glUniform1f(glGetUniformLocation(shaderProgram, "sunElevation"), -sunElevation);
+    glUniform1f(glGetUniformLocation(shaderProgram, "shininess"), 4.0f);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, cliffTexture);

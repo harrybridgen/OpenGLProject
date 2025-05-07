@@ -90,51 +90,6 @@ std::vector<float> LoadMyObjWithNormals(const std::string& inputfile) {
     return vertices;
 }
 
-std::vector<float> LoadMyObjUV(const std::string& inputfile) {
-    std::vector<float> vertices;
-
-    tinyobj::ObjReaderConfig reader_config;
-    reader_config.triangulate = true;
-
-    tinyobj::ObjReader reader;
-
-    if (!reader.ParseFromFile(inputfile, reader_config)) {
-        if (!reader.Error().empty()) {
-            std::cerr << "TinyObjReader: " << reader.Error();
-        }
-        exit(1);
-    }
-
-    if (!reader.Warning().empty()) {
-        std::cout << "TinyObjReader: " << reader.Warning();
-    }
-
-    const auto& attrib = reader.GetAttrib();
-    const auto& shapes = reader.GetShapes();
-
-    for (const auto& shape : shapes) {
-        for (const auto& idx : shape.mesh.indices) {
-            float vx = attrib.vertices[3 * idx.vertex_index + 0];
-            float vy = attrib.vertices[3 * idx.vertex_index + 1];
-            float vz = attrib.vertices[3 * idx.vertex_index + 2];
-            vertices.push_back(vx);
-            vertices.push_back(vy);
-            vertices.push_back(vz);
-
-            float tx = 0.0f;
-            float ty = 0.0f;
-            if (idx.texcoord_index >= 0) {
-                tx = attrib.texcoords[2 * idx.texcoord_index + 0];
-                ty = attrib.texcoords[2 * idx.texcoord_index + 1];
-            }
-            vertices.push_back(tx);
-            vertices.push_back(ty);
-        }
-    }
-
-    return vertices;
-}
-
 std::vector<MeshSegment> LoadMeshByMaterial(const std::string& inputfile) {
     tinyobj::ObjReaderConfig config;
     config.triangulate = true;

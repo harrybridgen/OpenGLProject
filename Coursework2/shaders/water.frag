@@ -6,7 +6,7 @@ uniform float time;
 uniform float sunElevation;
 
 float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(321, 123))) * 12345.12345);
+    return fract(sin(dot(p, vec2(456.3, 1123.189))) * 1928.5518);
 }
 
 float noise(vec2 p) {
@@ -24,7 +24,7 @@ float shimmer(vec2 uv, float t) {
     float n1 = noise(uv * 10.0 + vec2(t * 0.3, t * 0.2));
     float n2 = noise(uv * 20.0 - vec2(t * 0.4, t * 0.1));
     float n3 = noise(uv * 5.0 + vec2(-t * 0.2, t * 0.25));
-    return (n1 + n2 * 0.5 + n3 * 0.25) * 0.1;
+    return (n1 + n2 * 0.5 + n3 * 0.25) * 0.2;
 }
 
 void main() {

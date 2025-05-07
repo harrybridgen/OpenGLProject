@@ -25,16 +25,17 @@ void TreeManager::Generate(int count, float worldSize, Terrain &terrain) {
         float z = static_cast<float>(rand()) / RAND_MAX * worldSize;
         float y = terrain.GetTileHeight(x, z);
 
+		// if too low (as in the water plane) skip this tree
         if (y < -1.5f)
             continue;
 
+        // sink into ground a bit to ensure clip into terrain
 		y -= 0.5f;
+
         Tree tree;
         tree.position = glm::vec3(x, y, z);
         tree.scale = 6.0f + static_cast<float>(rand() % 100) / 40.0f;
         tree.rotationY = static_cast<float>(rand()) / RAND_MAX * glm::two_pi<float>();
-
-
         trees.push_back(tree);
     }
 
@@ -95,7 +96,7 @@ void TreeManager::SetupOpenGL() {
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normal
     glEnableVertexAttribArray(2);
 
-    // Leaves: same thing
+    // Leaves
     glBindVertexArray(leafVAO);
     glBindBuffer(GL_ARRAY_BUFFER, leafVBO);
     glBufferData(GL_ARRAY_BUFFER, leafVertices.size() * sizeof(float), leafVertices.data(), GL_STATIC_DRAW);
@@ -135,8 +136,6 @@ void TreeManager::Render(glm::mat4& projection, glm::mat4& view,
     GLuint shadowMap,
     float sunElevation) const
     const{
-
-
     glUseProgram(shaderProgram);
     glUniform1f(glGetUniformLocation(shaderProgram, "time"), glfwGetTime());
 
@@ -152,10 +151,6 @@ void TreeManager::Render(glm::mat4& projection, glm::mat4& view,
     GLuint texLoc = glGetUniformLocation(shaderProgram, "treeTexture");
     GLuint modelLoc = glGetUniformLocation(shaderProgram, "model");
     
-
-
-
-
     for (const auto& tree : trees) {
         glm::mat4 model = glm::translate(glm::mat4(1.0f), tree.position);
         model = glm::rotate(model, tree.rotationY, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -163,8 +158,7 @@ void TreeManager::Render(glm::mat4& projection, glm::mat4& view,
         glm::mat4 mvp = projection * view * model;
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-
+        
         GLint isLeafLoc = glGetUniformLocation(shaderProgram, "isLeaf");
 
         // Draw trunk

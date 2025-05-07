@@ -14,8 +14,6 @@
 #include "stb_image.h"
 #include "sun.h"
 
-
-
 const unsigned int WIDTH = 1400;
 const unsigned int HEIGHT = 800;
 const unsigned int NUM_TREES = 70;
@@ -138,7 +136,6 @@ void SetupPostProcessingFrameBuffer() {
 GLuint quadVAO, quadVBO;
 void SetupFullscreenQuad() {
     float quadVertices[] = {
-        // positions   // texCoords
         -1.0f,  1.0f,  0.0f, 1.0f,
         -1.0f, -1.0f,  0.0f, 0.0f,
          1.0f, -1.0f,  1.0f, 0.0f,
@@ -242,7 +239,7 @@ int main() {
 
     //init water
 	Water water = Water();
-    water.Init(WORLD_SIZE, -3.0f);
+    water.Init(WORLD_SIZE, 0.0f);
 
     //init terrain
     TreeManager treeManager;
@@ -298,7 +295,7 @@ int main() {
     float lastFrameTime = glfwGetTime();
 
     while (!glfwWindowShouldClose(window)) {
-        // calc delta time
+        // calc delta time df
         float currentFrameTime = glfwGetTime();
         float dt = currentFrameTime - lastFrameTime;
         lastFrameTime = currentFrameTime;
@@ -332,7 +329,7 @@ int main() {
         glBindFramebuffer(GL_FRAMEBUFFER, postFBO);
         glViewport(0, 0, WIDTH, HEIGHT);  
 
-        // Draw sky
+        // render sky sky
         float t = glm::clamp(sunElevation, -1.0f, 1.0f);
         float nightAmount = glm::clamp(glm::smoothstep(-0.9f, 0.0f, t), 0.0f, 1.0f);
         glm::vec3 nightColor = glm::vec3(0.05f, 0.05f, 0.1f);

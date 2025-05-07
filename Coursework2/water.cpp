@@ -38,7 +38,7 @@ void Water::Render(const glm::mat4& projection, const glm::mat4& view, float sun
     glUseProgram(shaderProgram);
 
     glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, -1.0, 0.0f));
+	model = glm::translate(model, glm::vec3(0.0f, -3.0, 0.0f));
     glm::mat4 mvp = projection * view * model;
 
     glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, glm::value_ptr(mvp));
