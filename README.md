@@ -1,5 +1,6 @@
 [View it in action here](https://youtu.be/gl-psFSN4wM)
 
+[DemoIMG](OpenGLDemo.JPG)
 
 # RunEscape: Real-Time Terrain Exploration
 
