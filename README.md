@@ -8,7 +8,7 @@ By Harry Bridgen
 
 ## Overview
 
-This is a C++ OpenGL terrain simulation and exploration project developed for university coursework. It showcases a dynamic 3D world featuring procedurally generated terrain, lighting with shadows, post-processing effects, and a controllable player character.
+This is a C++ OpenGL terrain simulation and exploration project. It showcases a dynamic 3D world featuring procedurally generated terrain, lighting with shadows, post-processing effects, and a controllable player character.
 
 All core systems, including terrain rendering, environment effects, camera, player movement, tree placement, water simulation, and post-processing fog, were implemented by me.
 
