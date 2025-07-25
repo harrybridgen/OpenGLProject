@@ -26,15 +26,15 @@ All core systems, including terrain rendering, environment effects, camera, play
 
 ## Project Structure
 
-- `Coursework2.cpp` — Main application loop and OpenGL setup
-- `camera.cpp` — Orbiting camera system with mouse controls
-- `player.cpp` — Click-to-move player logic, animation, and rendering
-- `terrain.cpp` — Terrain mesh generation, noise-based elevation, and material blending
-- `tree.cpp` — Tree placement and rendering with support for multiple meshes and textures
-- `sun.cpp` — Simulates sun movement, light color, and direction over time
-- `water.cpp` — Renders animated water plane with time-driven shader
-- `shader.cpp` — GLSL shader compilation helper
-- `/shaders` — Folder containing multiple shaders
+- `Coursework2.cpp` - Main application loop and OpenGL setup
+- `camera.cpp` - Orbiting camera system with mouse controls
+- `player.cpp` - Click-to-move player logic, animation, and rendering
+- `terrain.cpp` - Terrain mesh generation, noise-based elevation, and material blending
+- `tree.cpp` - Tree placement and rendering with support for multiple meshes and textures
+- `sun.cpp` - Simulates sun movement, light color, and direction over time
+- `water.cpp` - Renders animated water plane with time-driven shader
+- `shader.cpp` - GLSL shader compilation helper
+- `/shaders` - Folder containing multiple shaders
 
 ## Dependencies
 
@@ -45,9 +45,9 @@ All core systems, including terrain rendering, environment effects, camera, play
 
 ## Controls
 
-- **Right Mouse Drag** — Rotate the camera
-- **Scroll Wheel** — Zoom in/out
-- **Left Mouse Click** — Set player destination
+- **Right Mouse Drag** - Rotate the camera
+- **Scroll Wheel** - Zoom in/out
+- **Left Mouse Click** - Set player destination
 
 ## Author
 
@@ -56,5 +56,4 @@ Harry Bridgen
 
 ## Credits
 
-- University of Nottingham — Coursework specification
-- OpenGL, GLFW, GLM — Core libraries used
+- OpenGL, GLFW, GLM - Core libraries used
